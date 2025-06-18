@@ -1,0 +1,34 @@
+{% extends 'resumen/base.html' %}
+{% block title %}Subir archivo Excel{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow p-4">
+            <h2 class="mb-3">Subir archivo Excel de Compras/Ventas</h2>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="archivo" class="form-label">Selecciona el archivo Excel (.xlsx)</label>
+                    <input type="file" class="form-control" id="archivo" name="archivo" accept=".xlsx" required>
+                </div>
+                <button type="submit" class="btn btn-success">Subir y Procesar</button>
+            </form>
+            <div class="alert alert-info mt-3">
+                <b>Instrucciones:</b><br>
+                - El archivo debe tener una hoja llamada <b>Compras</b> o <b>Ventas</b>.<br>
+                - Debe contener exactamente los 15 campos requeridos (ver plantilla de ejemplo).<br>
+                - Los campos vacíos serán marcados como "NA" automáticamente.<br>
+                <a href="/media/plantilla_ejemplo.xlsx" class="btn btn-link">Descargar plantilla de ejemplo</a>
+            </div>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% if excel_error %}
+                <div class="alert alert-danger mt-2">{{ excel_error }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,31 @@
+{% extends 'resumen/base.html' %}
+{% block title %}Resumen General{% endblock %}
+{% block content %}
+<h1>Resumen General</h1>
+<div class="table-responsive">
+<table class="table table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Cuenta</th>
+            <th>Unidad</th>
+            <th>Mes</th>
+            <th>Año</th>
+            <th>Costo</th>
+            <th>% del Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in resumen %}
+        <tr>
+            <td>{{ item.cuenta }}</td>
+            <td>{{ item.unidad }}</td>
+            <td>{{ item.mes }}</td>
+            <td>{{ item.año }}</td>
+            <td>${{ item.total|floatformat:2 }}</td>
+            <td>{{ item.porcentaje }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %} 

@@ -1,0 +1,61 @@
+{% extends 'resumen/base.html' %}
+{% block title %}Estado de Resultados{% endblock %}
+{% block content %}
+<h1>Estado de Resultados</h1>
+<div class="mb-3">
+  <a href="{% url 'estado_resultados' %}" class="btn btn-primary">Resumen Financiero</a>
+  <a href="{% url 'descargar_resumen_excel' %}" class="btn btn-success">Descargar Resumen en Excel</a>
+  <a href="{% url 'descargar_resumen_pdf' %}" class="btn btn-danger">Descargar Resumen en PDF</a>
+</div>
+<div class="card mb-4">
+  <div class="card-header"><b>Estado de Resultados</b></div>
+  <div class="card-body p-2">
+    <table class="table table-bordered mb-0 w-auto">
+      <tbody>
+        <tr>
+          <th>Total Ventas</th>
+          <td>${{ estado_resultados.total_ventas|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <th>Total Gastos</th>
+          <td>${{ estado_resultados.total_gastos|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <th>Totalidad Operativa</th>
+          <td style="color: {% if estado_resultados.totalidad_operativa < 0 %}red{% else %}green{% endif %}; font-weight:bold;">
+            ${{ estado_resultados.totalidad_operativa|floatformat:2 }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h2>Resumen General</h2>
+<div class="table-responsive">
+<table class="table table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Cuenta</th>
+            <th>Unidad</th>
+            <th>Mes</th>
+            <th>Año</th>
+            <th>Costo</th>
+            <th>% del Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in resumen %}
+        <tr>
+            <td>{{ item.cuenta }}</td>
+            <td>{{ item.unidad }}</td>
+            <td>{{ item.mes }}</td>
+            <td>{{ item.año }}</td>
+            <td>${{ item.total|floatformat:2 }}</td>
+            <td>{{ item.porcentaje }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %} 

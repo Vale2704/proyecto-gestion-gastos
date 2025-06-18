@@ -1,0 +1,174 @@
+{% extends 'resumen/base.html' %}
+{% block title %}Clasificación de Gastos{% endblock %}
+{% block content %}
+{% load extra_filters %}
+<h1>Clasificación de Gastos</h1>
+<a href="{% url 'generar_reporte' %}" class="btn btn-info mb-3">Descargar reporte Excel</a>
+<button class="btn btn-secondary mb-3" data-bs-toggle="modal" data-bs-target="#resumenModal">Ver Resumen del Documento</button>
+
+<!-- Estado de Resultados -->
+{% if estado_resultados %}
+<div class="card mb-4">
+  <div class="card-header"><b>Estado de Resultados</b></div>
+  <div class="card-body p-2">
+    <table class="table table-bordered mb-0 w-auto">
+      <tbody>
+        <tr>
+          <th>Total Ventas</th>
+          <td>${{ estado_resultados.total_ventas|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <th>Total Gastos</th>
+          <td>${{ estado_resultados.total_gastos|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <th>Totalidad Operativa</th>
+          <td style="color: {% if estado_resultados.totalidad_operativa < 0 %}red{% else %}green{% endif %}; font-weight:bold;">
+            ${{ estado_resultados.totalidad_operativa|floatformat:2 }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if excel_error %}
+<div class="alert alert-danger mt-3">{{ excel_error }}</div>
+{% endif %}
+
+<style>
+    .agrupacion-row { background: #b71c1c; color: #fff; font-weight: bold; }
+    .subagrupacion-row { background: #e57373; font-weight: bold; }
+    .categoria-row { background: #f5f5f5; font-weight: bold; }
+    .total-row { background: #c8e6c9; font-weight: bold; }
+</style>
+
+<form method="get" class="mb-3">
+  <label for="tipo">Mostrar:</label>
+  <select name="tipo" id="tipo" class="form-select d-inline w-auto mx-2">
+    <option value="compra" {% if tipo == 'compra' %}selected{% endif %}>Compras</option>
+    <option value="venta" {% if tipo == 'venta' %}selected{% endif %}>Ventas</option>
+  </select>
+  <button type="submit" class="btn btn-primary">Filtrar</button>
+</form>
+
+{% if tabla_jerarquica and columnas_meses %}
+<h3 class="mt-4">Gastos Agrupados (Formato Vertical)</h3>
+<div class="table-responsive">
+<table class="table table-bordered table-sm align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Agrupación</th>
+            <th>Subagrupación</th>
+            <th>Categoría</th>
+            <th>Cuenta</th>
+            {% for mes in columnas_meses %}
+                <th>{{ mes }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for row in tabla_jerarquica %}
+        <tr class="{% if row.agrupacion == 'Ingresos' %}agrupacion-row{% elif row.agrupacion == 'Costo de Producción' %}subagrupacion-row{% elif row.agrupacion == 'Gasto OPERATIVO' %}categoria-row{% endif %}">
+            <td>{{ row.agrupacion }}</td>
+            <td>{{ row.subagrupacion }}</td>
+            <td>{{ row.categoria }}</td>
+            <td>{{ row.cuenta }}</td>
+            {% for mes in columnas_meses %}
+                <td>{% if row|get_item:mes %}${{ row|get_item:mes|floatformat:2 }}{% else %}-{% endif %}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+{% if excel_html %}
+    <h3 class="mt-4">Vista previa del documento Excel subido</h3>
+    <div class="table-responsive">{{ excel_html|safe }}</div>
+{% endif %}
+
+{% if clasificacion %}
+    <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Tipo de Gasto</th>
+                <th>Mes</th>
+                <th>Unidad de Negocio</th>
+                <th>Valor</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Cuenta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in filas %}
+            <tr>
+                <td>{{ fila.tipo_gasto }}</td>
+                <td>{{ fila.mes }}</td>
+                <td>{{ fila.unidad }}</td>
+                <td>{{ fila.valor }}</td>
+                <td>{{ fila.tipo }}</td>
+                <td>{{ fila.descripcion }}</td>
+                <td>{{ fila.cuenta }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+{% else %}
+    <p>No se encontraron gastos para clasificar. Verifica que el archivo Excel tenga datos válidos.</p>
+{% endif %}
+<hr>
+<a href="/subir/" class="btn btn-success">Subir otro archivo</a>
+
+<!-- Modal para el resumen -->
+<div class="modal fade" id="resumenModal" tabindex="-1" aria-labelledby="resumenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="resumenModalLabel">Resumen del Documento Subido</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        {% if resumen and resumen|length > 0 %}
+        <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Cuenta</th>
+                    <th>Unidad</th>
+                    <th>Mes</th>
+                    <th>Año</th>
+                    <th>Costo</th>
+                    <th>% del Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in resumen %}
+                <tr>
+                    <td>{{ item.cuenta }}</td>
+                    <td>{{ item.unidad }}</td>
+                    <td>{{ item.mes }}</td>
+                    <td>{{ item.año }}</td>
+                    <td>${{ item.total|floatformat:2 }}</td>
+                    <td>{{ item.porcentaje }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p>No hay resumen disponible.</p>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
